@@ -67,6 +67,12 @@ function getCurrentStats(server) {
   return server?.online && server.stats ? server.stats : server?.stats;
 }
 
+function groupLabel(server) {
+  const groups = [...new Set(state.servers.map((entry) => entry.group || "Servers"))];
+  const index = groups.indexOf(server.group || "Servers");
+  return index >= 0 ? `Сеть ${index + 1}` : "СЕРВЕР";
+}
+
 function updateSummary(payload) {
   const live = state.servers.filter((server) => server.online && server.stats);
   const onlineCount = live.reduce((sum, server) => sum + (Number(server.stats.online) || 0), 0);
@@ -141,12 +147,12 @@ function renderGroups() {
       </span>
       <span class="group-online"></span>
       <span class="group-chevron"><i data-lucide="chevron-down" aria-hidden="true"></i></span>`;
-    button.querySelector(".group-title").textContent = groupName;
+    button.querySelector(".group-title").textContent = `Сеть ${groups.size ? [...groups.keys()].indexOf(groupName) + 1 : 1}`;
     button.querySelector(".group-caption").textContent = `${online} из ${servers.length} в сети`;
     button.querySelector(".group-online").textContent = `${number(players)} онлайн`;
 
     if (servers.length === 1) {
-      button.setAttribute("aria-label", `${groupName}, открыть статистику сервера`);
+      button.setAttribute("aria-label", `${button.querySelector(".group-title").textContent}, открыть статистику сервера`);
       button.addEventListener("click", () => openServer(servers[0].id));
     } else {
       button.addEventListener("click", () => {
@@ -186,7 +192,7 @@ function addDetail(label, value) {
 function renderDetails(server) {
   const stats = getCurrentStats(server);
   $("#dialogServerName").textContent = server.name;
-  $("#dialogGroup").textContent = server.group || "СЕРВЕР";
+  $("#dialogGroup").textContent = groupLabel(server);
   $("#dialogAddress").textContent = server.address || "";
   $("#dialogSeen").textContent = `Обновление ${timeAgo(server.last_seen)}`;
   const status = $("#dialogStatus");

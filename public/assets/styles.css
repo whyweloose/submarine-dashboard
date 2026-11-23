@@ -246,6 +246,11 @@ h1 { margin-bottom: 7px; font-size: 34px; font-weight: 600; line-height: 1.15; }
 }
 
 @media (max-width: 440px) {
+  .topbar { gap: 10px; }
+  .topbar-tools { gap: 8px; }
+  .live-indicator { gap: 6px; font-size: 10px; white-space: nowrap; }
+  .live-indicator span { max-width: 72px; overflow: hidden; text-overflow: ellipsis; }
+  .topbar .icon-button { width: 34px; height: 34px; flex: 0 0 34px; }
   .overview { grid-template-columns: minmax(0, 1fr) 112px; min-height: 245px; }
   .overview-copy { margin-left: 0; }
   h1 { max-width: 240px; font-size: 25px; }
