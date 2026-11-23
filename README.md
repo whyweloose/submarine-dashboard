@@ -21,7 +21,7 @@ The API listens on `127.0.0.1:8765` by default. Serve `public/` with a static we
 ./start.sh
 ```
 
-The first valid telemetry report automatically adds its `server_id` to the dashboard. Submarine derives this ID from the server instance directory, so no server registration file or per-server dashboard setup is needed. The core sends the cleaned server MOTD as `server_name`; Minecraft formatting codes are removed before it is stored and displayed. Servers that reach the API from the same source IP share a stable opaque `group_id` and appear under the `Network` group label. The source IP is hashed before storage and is never returned by the API.
+The first valid telemetry report automatically adds its `server_id` to the dashboard. Submarine derives this ID from the server instance directory, so no server registration file or per-server dashboard setup is needed. The core sends the cleaned server MOTD as `server_name`; Minecraft formatting codes are removed before it is stored and displayed. A source IP gets an opaque `group_id` and the `Network` label only when at least two servers report from it; a lone server is displayed directly. The source IP is hashed before storage and is never returned by the API.
 
 Environment variables:
 
@@ -53,7 +53,7 @@ curl -X POST https://api.whyweloose.pw/api/submarine/v1/telemetry \
   --data '{"server_id":"grief","stats":{"uptime_seconds":3600,"tps_current":20,"load_current_percent":12.5,"tps_average":19.98,"load_average_percent":13.2,"online":8,"max_players":100,"network_upload_kb_s":4.2,"network_download_kb_s":8.1,"thread_count":12,"memory_mb":{"main":45,"total":620,"virtual":810,"heap":48,"max":2048},"worlds":[]}}'
 ```
 
-`stats` supports uptime, current and average TPS/load, online and maximum players, network rates, thread count, memory values, and world counters. List responses include `group` (`Network`) and an opaque `group_id` so clients can group servers without receiving source IPs. Player names and source IPs are not returned by the API. A successful report returns `202`; invalid server IDs or JSON return `400`, oversized reports return `413`, and rate or server capacity limits return `429`.
+`stats` supports uptime, current and average TPS/load, online and maximum players, network rates, thread count, memory values, and world counters. When two or more servers share a source IP, responses include `group` (`Network`) and an opaque `group_id`; singleton servers receive `null` for both fields. Player names and source IPs are not returned by the API. A successful report returns `202`; invalid server IDs or JSON return `400`, oversized reports return `413`, and rate or server capacity limits return `429`.
 
 Accepted and rejected telemetry requests are written to the service journal with the server ID, HTTP status, and opaque group ID when available. The source IP and request body are not logged. Inspect the recent report results with:
 

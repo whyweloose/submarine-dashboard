@@ -119,7 +119,7 @@
         <section class="api-method" aria-labelledby="serversMethod">
           <div class="api-method-heading"><span class="http-method http-get">GET</span><h2 id="serversMethod"><code>/servers</code></h2><span>Список серверов, общий онлайн и последние точки истории.</span></div>
           <pre><code>curl https://api.whyweloose.pw/api/submarine/v1/servers</code></pre>
-          <p class="api-note">Ответ содержит <code>generated_at</code>, <code>total_online</code> и массив <code>servers</code>. У каждого сервера есть <code>id</code>, чистое имя из MOTD в <code>name</code>, подпись группы <code>group</code> и обезличенный ключ группы <code>group_id</code>, а также <code>online</code>, <code>last_seen</code>, <code>stats</code> и <code>history</code>.</p>
+          <p class="api-note">Ответ содержит <code>generated_at</code>, <code>total_online</code> и массив <code>servers</code>. У каждого сервера есть <code>id</code>, чистое имя из MOTD в <code>name</code>, <code>online</code>, <code>last_seen</code>, <code>stats</code> и <code>history</code>. Поля <code>group</code> и <code>group_id</code> заполнены только когда на IP есть два или более сервера, иначе они равны <code>null</code>.</p>
         </section>
 
         <section class="api-method" aria-labelledby="serverMethod">
@@ -130,7 +130,7 @@
 
         <section class="api-method" aria-labelledby="telemetryMethod">
           <div class="api-method-heading"><span class="http-method http-post">POST</span><h2 id="telemetryMethod"><code>/telemetry</code></h2><span>Приём статистики от ядра Submarine.</span></div>
-          <p class="api-note">Тело запроса JSON. Новые серверы автоматически появляются после первого отчёта; токен и регистрация не нужны. Имя сервера ядро берёт из MOTD и убирает цветовые коды Minecraft. Серверы с одного IP получают общий <code>group_id</code> и отображаются в группе <code>Network</code>.</p>
+          <p class="api-note">Тело запроса JSON. Новые серверы автоматически появляются после первого отчёта; токен и регистрация не нужны. Имя сервера ядро берёт из MOTD и убирает цветовые коды Minecraft. Серверы с одного IP получают общий <code>group_id</code> и отображаются в группе <code>Network</code>, если их два или более; одиночный сервер показывается напрямую.</p>
           <p class="api-note">Лимит: 120 отчётов в минуту с одного IP, максимум 256 серверов. IP используется для группы, хэшируется перед сохранением и не раскрывается в API.</p>
           <pre><code>curl -X POST https://api.whyweloose.pw/api/submarine/v1/telemetry \
   -H 'Content-Type: application/json' \

@@ -77,8 +77,8 @@ test("auto-discovers servers and persists telemetry without a registration file"
     assert.equal(payload.total_online, 8);
     assert.equal(payload.servers[0].online, true);
     assert.equal(payload.servers[0].name, "Grief #1");
-    assert.equal(payload.servers[0].group, "Network");
-    assert.match(payload.servers[0].group_id, /^group-[a-f0-9]{16}$/);
+    assert.equal(payload.servers[0].group, null);
+    assert.equal(payload.servers[0].group_id, null);
     assert.equal(payload.servers[0].address, "");
     assert.equal(payload.servers[0].history.length, 1);
     assert.equal(payload.servers[0].stats.memory_mb.total, 620);
@@ -91,8 +91,12 @@ test("auto-discovers servers and persists telemetry without a registration file"
     assert.equal(sameNetwork.status, 202);
     const sameNetworkServer = await fetch(`${origin}${api}/servers/survival`);
     const sameNetworkPayload = await sameNetworkServer.json();
-    assert.equal(sameNetworkPayload.group_id, payload.servers[0].group_id);
+    assert.match(sameNetworkPayload.group_id, /^group-[a-f0-9]{16}$/);
     assert.equal(sameNetworkPayload.group, "Network");
+    const groupedGrief = await fetch(`${origin}${api}/servers/grief`);
+    const groupedGriefPayload = await groupedGrief.json();
+    assert.equal(groupedGriefPayload.group_id, sameNetworkPayload.group_id);
+    assert.equal(groupedGriefPayload.group, "Network");
 
     const detail = await fetch(`${origin}${api}/servers/grief`);
     assert.equal(detail.status, 200);
@@ -105,7 +109,18 @@ test("auto-discovers servers and persists telemetry without a registration file"
     });
     assert.equal(automaticServer.status, 202);
     const differentNetwork = await fetch(`${origin}${api}/servers/winterspawn`);
-    assert.notEqual((await differentNetwork.json()).group_id, payload.servers[0].group_id);
+    assert.equal((await differentNetwork.json()).group_id, null);
+    const secondDifferentNetwork = await fetch(`${origin}${api}/telemetry`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-real-ip": "198.51.100.17" },
+      body: JSON.stringify({ server_id: "winterspawn2", stats: sampleStats }),
+    });
+    assert.equal(secondDifferentNetwork.status, 202);
+    const groupedWinterspawn = await fetch(`${origin}${api}/servers/winterspawn`);
+    const groupedWinterspawnPayload = await groupedWinterspawn.json();
+    assert.equal(groupedWinterspawnPayload.group, "Network");
+    assert.match(groupedWinterspawnPayload.group_id, /^group-[a-f0-9]{16}$/);
+    assert.notEqual(groupedWinterspawnPayload.group_id, sameNetworkPayload.group_id);
 
     const motdName = await fetch(`${origin}${api}/telemetry`, {
       method: "POST",
@@ -114,13 +129,16 @@ test("auto-discovers servers and persists telemetry without a registration file"
     });
     assert.equal(motdName.status, 202);
     const cleanName = await fetch(`${origin}${api}/servers/sinexiwix`);
-    assert.equal((await cleanName.json()).name, "Sinexiwix Network");
+    const cleanNamePayload = await cleanName.json();
+    assert.equal(cleanNamePayload.name, "Sinexiwix Network");
+    assert.equal(cleanNamePayload.group, null);
+    assert.equal(cleanNamePayload.group_id, null);
 
     const unknown = await fetch(`${origin}${api}/servers/missing`);
     assert.equal(unknown.status, 404);
     const state = JSON.parse(await readFile(join(directory, "state.json"), "utf8"));
     assert.equal(state.servers.grief.history.length, 1);
-    assert.equal(Object.keys(state.servers).length, 4);
+    assert.equal(Object.keys(state.servers).length, 5);
   });
 });
 

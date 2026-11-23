@@ -41,6 +41,17 @@ export function serverGroupForAddress(address) {
   return `group-${createHash("sha256").update(address).digest("hex").slice(0, 16)}`;
 }
 
+function storedGroupId(stored) {
+  const entry = isObject(stored) ? stored : {};
+  if (typeof entry.group_id === "string" && entry.group_id.trim()) return entry.group_id;
+  const oldGroupId = typeof entry.group === "string" ? entry.group.match(/^Network ([A-F0-9]{10})$/)?.[1]?.toLowerCase() : null;
+  return oldGroupId ? `group-${oldGroupId}` : "group-default";
+}
+
+function storedGroupSize(servers, groupId) {
+  return Object.values(servers).filter((entry) => storedGroupId(entry) === groupId).length;
+}
+
 function clientAddress(request) {
   const forwarded = request.headers["x-real-ip"];
   const rawAddress = typeof forwarded === "string" && forwarded.trim()
@@ -193,18 +204,18 @@ export class TelemetryStore {
   }
 }
 
-export function publicSnapshot(serverId, stored, now) {
+export function publicSnapshot(serverId, stored, now, groupSize = 1) {
   const entry = isObject(stored) ? stored : {};
   const latest = isObject(entry.latest) ? entry.latest : null;
   const lastSeen = typeof latest?.timestamp === "number" ? latest.timestamp : null;
   const history = Array.isArray(entry.history) ? entry.history.slice(-MAX_HISTORY) : [];
   const online = lastSeen !== null && now - lastSeen <= STALE_AFTER_SECONDS;
-  const oldGroupId = typeof entry.group === "string" ? entry.group.match(/^Network ([A-F0-9]{10})$/)?.[1]?.toLowerCase() : null;
+  const groupId = storedGroupId(entry);
   return {
     id: serverId,
     name: safeText(entry.name, serverId, 80),
-    group: "Network",
-    group_id: safeText(entry.group_id, oldGroupId ? `group-${oldGroupId}` : "group-default", 80),
+    group: groupSize > 1 ? "Network" : null,
+    group_id: groupSize > 1 ? safeText(groupId, "group-default", 80) : null,
     address: "",
     online,
     last_seen: lastSeen,
@@ -404,7 +415,12 @@ export class DashboardServer {
     }
     const now = Date.now() / 1000;
     const servers = Object.keys(state.servers).sort().map((serverId) =>
-      publicSnapshot(serverId, state.servers[serverId], now)
+      publicSnapshot(
+        serverId,
+        state.servers[serverId],
+        now,
+        storedGroupSize(state.servers, storedGroupId(state.servers[serverId]))
+      )
     );
     const totalOnline = servers.reduce((total, server) =>
       total + (server.online ? server.stats?.online || 0 : 0), 0
@@ -420,7 +436,13 @@ export class DashboardServer {
       throw new HttpError(500, "storage_failure");
     }
     if (!Object.hasOwn(state.servers, serverId)) throw new HttpError(404, "unknown_server");
-    this.#respond(response, 200, publicSnapshot(serverId, state.servers[serverId], Date.now() / 1000));
+    const groupId = storedGroupId(state.servers[serverId]);
+    this.#respond(response, 200, publicSnapshot(
+      serverId,
+      state.servers[serverId],
+      Date.now() / 1000,
+      storedGroupSize(state.servers, groupId)
+    ));
   }
 
   #respond(response, status, payload) {

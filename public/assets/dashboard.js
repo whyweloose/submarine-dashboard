@@ -68,7 +68,7 @@ function getCurrentStats(server) {
 }
 
 function groupLabel(server) {
-  return server.group || "Network";
+  return server.group || "СЕРВЕР";
 }
 
 function updateSummary(payload) {
@@ -128,12 +128,17 @@ function renderGroups() {
 
   const groups = new Map();
   for (const server of state.servers) {
-    const key = server.group_id || server.group || "Network";
+    const key = server.group_id || server.group || `server:${server.id}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(server);
   }
 
   for (const [groupKey, servers] of groups) {
+    if (servers.length === 1) {
+      groupsElement.append(makeServerCard(servers[0]));
+      continue;
+    }
+
     const online = servers.filter((server) => server.online).length;
     const players = servers.reduce((sum, server) => sum + (server.online ? Number(server.stats?.online) || 0 : 0), 0);
     const item = document.createElement("section");
@@ -154,15 +159,10 @@ function renderGroups() {
     button.querySelector(".group-caption").textContent = `${online} из ${servers.length} в сети`;
     button.querySelector(".group-online").textContent = `${number(players)} онлайн`;
 
-    if (servers.length === 1) {
-      button.setAttribute("aria-label", `${button.querySelector(".group-title").textContent}, открыть статистику сервера`);
-      button.addEventListener("click", () => openServer(servers[0].id));
-    } else {
-      button.addEventListener("click", () => {
-        state.expandedGroup = state.expandedGroup === groupKey ? null : groupKey;
-        renderGroups();
-      });
-    }
+    button.addEventListener("click", () => {
+      state.expandedGroup = state.expandedGroup === groupKey ? null : groupKey;
+      renderGroups();
+    });
 
     const disclosure = document.createElement("div");
     disclosure.className = "group-servers";
