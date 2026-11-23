@@ -77,7 +77,8 @@ test("auto-discovers servers and persists telemetry without a registration file"
     assert.equal(payload.total_online, 8);
     assert.equal(payload.servers[0].online, true);
     assert.equal(payload.servers[0].name, "Grief #1");
-    assert.match(payload.servers[0].group, /^Network [A-F0-9]{10}$/);
+    assert.equal(payload.servers[0].group, "Network");
+    assert.match(payload.servers[0].group_id, /^group-[a-f0-9]{16}$/);
     assert.equal(payload.servers[0].address, "");
     assert.equal(payload.servers[0].history.length, 1);
     assert.equal(payload.servers[0].stats.memory_mb.total, 620);
@@ -89,7 +90,8 @@ test("auto-discovers servers and persists telemetry without a registration file"
     });
     assert.equal(sameNetwork.status, 202);
     const sameNetworkServer = await fetch(`${origin}${api}/servers/survival`);
-    assert.equal((await sameNetworkServer.json()).group, payload.servers[0].group);
+    assert.equal((await sameNetworkServer.json()).group_id, payload.servers[0].group_id);
+    assert.equal((await sameNetworkServer.json()).group, "Network");
 
     const detail = await fetch(`${origin}${api}/servers/grief`);
     assert.equal(detail.status, 200);
@@ -102,13 +104,22 @@ test("auto-discovers servers and persists telemetry without a registration file"
     });
     assert.equal(automaticServer.status, 202);
     const differentNetwork = await fetch(`${origin}${api}/servers/winterspawn`);
-    assert.notEqual((await differentNetwork.json()).group, payload.servers[0].group);
+    assert.notEqual((await differentNetwork.json()).group_id, payload.servers[0].group_id);
+
+    const motdName = await fetch(`${origin}${api}/telemetry`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-real-ip": "198.51.100.28" },
+      body: JSON.stringify({ server_id: "sinexiwix", server_name: "§l§cSinexiwix §7Network", stats: sampleStats }),
+    });
+    assert.equal(motdName.status, 202);
+    const cleanName = await fetch(`${origin}${api}/servers/sinexiwix`);
+    assert.equal((await cleanName.json()).name, "Sinexiwix Network");
 
     const unknown = await fetch(`${origin}${api}/servers/missing`);
     assert.equal(unknown.status, 404);
     const state = JSON.parse(await readFile(join(directory, "state.json"), "utf8"));
     assert.equal(state.servers.grief.history.length, 1);
-    assert.equal(Object.keys(state.servers).length, 3);
+    assert.equal(Object.keys(state.servers).length, 4);
   });
 });
 

@@ -32,13 +32,13 @@ function isObject(value) {
 
 export function safeText(value, fallback, maxLength) {
   if (typeof value !== "string") return fallback;
-  const cleaned = value.trim().split(/\s+/).filter(Boolean).join(" ").slice(0, maxLength);
+  const plain = value.replace(/§(?:x(?:§[0-9a-f]){6}|[0-9a-fk-or])/gi, "");
+  const cleaned = plain.trim().split(/\s+/).filter(Boolean).join(" ").slice(0, maxLength);
   return cleaned || fallback;
 }
 
 export function serverGroupForAddress(address) {
-  const groupId = createHash("sha256").update(address).digest("hex").slice(0, 10).toUpperCase();
-  return `Network ${groupId}`;
+  return `group-${createHash("sha256").update(address).digest("hex").slice(0, 16)}`;
 }
 
 function clientAddress(request) {
@@ -199,10 +199,12 @@ export function publicSnapshot(serverId, stored, now) {
   const lastSeen = typeof latest?.timestamp === "number" ? latest.timestamp : null;
   const history = Array.isArray(entry.history) ? entry.history.slice(-MAX_HISTORY) : [];
   const online = lastSeen !== null && now - lastSeen <= STALE_AFTER_SECONDS;
+  const oldGroupId = typeof entry.group === "string" ? entry.group.match(/^Network ([A-F0-9]{10})$/)?.[1]?.toLowerCase() : null;
   return {
     id: serverId,
     name: safeText(entry.name, serverId, 80),
-    group: safeText(entry.group, "Servers", 80),
+    group: "Network",
+    group_id: safeText(entry.group_id, oldGroupId ? `group-${oldGroupId}` : "group-default", 80),
     address: "",
     online,
     last_seen: lastSeen,
@@ -292,8 +294,24 @@ export class DashboardServer {
     } catch (error) {
       if (response.headersSent || response.destroyed) return;
       if (error instanceof HttpError) {
+        if (request.method === "POST" && request.url?.startsWith(`${API_PREFIX}/telemetry`)) {
+          console.warn(JSON.stringify({
+            event: "telemetry_rejected",
+            server_id: request.telemetryServerId || null,
+            status: error.status,
+            error: error.code,
+          }));
+        }
         this.#respond(response, error.status, { error: error.code });
         return;
+      }
+      if (request.method === "POST" && request.url?.startsWith(`${API_PREFIX}/telemetry`)) {
+        console.error(JSON.stringify({
+          event: "telemetry_rejected",
+          server_id: request.telemetryServerId || null,
+          status: 500,
+          error: "internal_error",
+        }));
       }
       console.error("Dashboard request failed:", error.message);
       this.#respond(response, 500, { error: "internal_error" });
@@ -344,6 +362,7 @@ export class DashboardServer {
     if (!isObject(payload)) throw new HttpError(400, "invalid_payload");
 
     const serverId = payload.server_id;
+    request.telemetryServerId = typeof serverId === "string" ? serverId : null;
     if (typeof serverId !== "string" || !SERVER_ID_PATTERN.test(serverId)) {
       throw new HttpError(400, "invalid_server_id");
     }
@@ -358,7 +377,8 @@ export class DashboardServer {
     const snapshot = { timestamp: Date.now() / 1000, stats };
     const metadata = {
       name: safeText(payload.server_name, serverId, 80),
-      group: serverGroupForAddress(address),
+      group: "Network",
+      group_id: serverGroupForAddress(address),
     };
     try {
       await this.telemetryStore.append(serverId, metadata, snapshot);
@@ -366,6 +386,12 @@ export class DashboardServer {
       if (error instanceof ServerCapacityError) throw new HttpError(429, error.message);
       throw new HttpError(500, "storage_failure");
     }
+    console.info(JSON.stringify({
+      event: "telemetry_accepted",
+      server_id: serverId,
+      status: 202,
+      group_id: metadata.group_id,
+    }));
     this.#respond(response, 202, { accepted: true, server_id: serverId });
   }
 

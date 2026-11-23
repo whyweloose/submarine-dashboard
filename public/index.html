@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#081426">
+  <meta name="theme-color" content="#111318">
   <meta name="description" content="Живая статистика серверов Submarine">
   <link rel="icon" href="/favicon.svg?v=20261123-2" type="image/svg+xml">
   <title>Submarine | Статистика серверов</title>
-  <link rel="stylesheet" href="/assets/styles.css?v=20261123-8">
+  <link rel="stylesheet" href="/assets/styles.css?v=20261123-9">
   <link rel="modulepreload" href="/assets/vendor/three.module.js">
   <script src="/assets/vendor/lucide.min.js" defer></script>
-  <script type="module" src="/assets/dashboard.js?v=20261123-5"></script>
+  <script src="/assets/fallback-scene.js?v=20261123-1" defer></script>
+  <script type="module" src="/assets/dashboard.js?v=20261123-6"></script>
 </head>
 <body>
   <div class="page-shell">
@@ -46,6 +47,7 @@
         </div>
         <div class="scene-wrap" aria-label="Анимированная 3D-сцена сети серверов">
           <canvas id="networkScene" role="img" aria-label="Вращающаяся 3D-сфера серверной сети"></canvas>
+          <canvas id="networkSceneFallback" aria-hidden="true"></canvas>
           <span class="scene-caption">WHYWELOOSE <span>·</span> SUBMARINE</span>
         </div>
       </section>
@@ -117,7 +119,7 @@
         <section class="api-method" aria-labelledby="serversMethod">
           <div class="api-method-heading"><span class="http-method http-get">GET</span><h2 id="serversMethod"><code>/servers</code></h2><span>Список серверов, общий онлайн и последние точки истории.</span></div>
           <pre><code>curl https://api.whyweloose.pw/api/submarine/v1/servers</code></pre>
-          <p class="api-note">Ответ содержит <code>generated_at</code>, <code>total_online</code> и массив <code>servers</code>. У каждого сервера есть <code>id</code>, <code>name</code>, <code>group</code>, <code>online</code>, <code>last_seen</code>, <code>stats</code> и <code>history</code>.</p>
+          <p class="api-note">Ответ содержит <code>generated_at</code>, <code>total_online</code> и массив <code>servers</code>. У каждого сервера есть <code>id</code>, чистое имя из MOTD в <code>name</code>, подпись группы <code>group</code> и обезличенный ключ группы <code>group_id</code>, а также <code>online</code>, <code>last_seen</code>, <code>stats</code> и <code>history</code>.</p>
         </section>
 
         <section class="api-method" aria-labelledby="serverMethod">
@@ -128,12 +130,12 @@
 
         <section class="api-method" aria-labelledby="telemetryMethod">
           <div class="api-method-heading"><span class="http-method http-post">POST</span><h2 id="telemetryMethod"><code>/telemetry</code></h2><span>Приём статистики от ядра Submarine.</span></div>
-          <p class="api-note">Тело запроса JSON. Новые серверы автоматически появляются после первого отчёта; токен и регистрация не нужны. Серверы с одного IP отображаются в общей группе.</p>
+          <p class="api-note">Тело запроса JSON. Новые серверы автоматически появляются после первого отчёта; токен и регистрация не нужны. Имя сервера ядро берёт из MOTD и убирает цветовые коды Minecraft. Серверы с одного IP получают общий <code>group_id</code> и отображаются в группе <code>Network</code>.</p>
           <p class="api-note">Лимит: 120 отчётов в минуту с одного IP, максимум 256 серверов. IP используется для группы, хэшируется перед сохранением и не раскрывается в API.</p>
           <pre><code>curl -X POST https://api.whyweloose.pw/api/submarine/v1/telemetry \
   -H 'Content-Type: application/json' \
   --data '{"server_id":"grief","server_name":"Grief #1","stats":{"uptime_seconds":3600,"tps_current":20,"load_current_percent":12.5,"tps_average":19.98,"load_average_percent":13.2,"online":8,"max_players":100,"network_upload_kb_s":4.2,"network_download_kb_s":8.1,"thread_count":12,"memory_mb":{"main":45,"total":620,"virtual":810,"heap":48,"max":2048},"worlds":[]}}'</code></pre>
-          <p class="api-note">В <code>stats</code> передаются uptime, текущие и средние TPS/нагрузка, онлайн, сетевой трафик, потоки, память и массив миров. Имя можно передать в <code>server_name</code>, иначе берётся ID из каталога сервера. IP не сохраняется; общий IP определяет группу серверов.</p>
+          <p class="api-note">В <code>stats</code> передаются uptime, текущие и средние TPS/нагрузка, онлайн, сетевой трафик, потоки, память и массив миров. Имя можно передать в <code>server_name</code>, иначе берётся ID из каталога сервера. IP не сохраняется; общий IP определяет непрозрачный ключ группы.</p>
           <pre class="api-response"><code>{ "accepted": true, "server_id": "grief" }</code></pre>
           <p class="api-note">Успешный отчёт возвращает <code>202</code>; неправильный ID или JSON — <code>400</code>, превышение частоты или лимита новых серверов — <code>429</code>.</p>
         </section>

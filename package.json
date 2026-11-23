@@ -9,6 +9,6 @@
   "scripts": {
     "start": "node api/server.js",
     "test": "node --test",
-    "check": "node --check api/server.js && node --check api/server.test.js && node --check public/assets/dashboard.js && node --check public/assets/network-scene.js"
+    "check": "node --check api/server.js && node --check api/server.test.js && node --check public/assets/dashboard.js && node --check public/assets/network-scene.js && node --check public/assets/fallback-scene.js"
   }
 }

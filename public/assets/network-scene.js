@@ -7,7 +7,7 @@ async function createScene() {
   if (!canvas || !host) return;
 
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "low-power" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setClearColor(0x000000, 0);
 
   const scene = new THREE.Scene();
@@ -125,6 +125,11 @@ async function createScene() {
   };
   applyTheme();
   window.addEventListener("submarine-themechange", applyTheme);
+  let loadPercent = 0;
+  window.addEventListener("submarine-load-update", (event) => {
+    const value = Number(event.detail?.loadPercent);
+    loadPercent = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
+  });
 
   const resize = () => {
     const { width, height } = host.getBoundingClientRect();
@@ -160,6 +165,10 @@ async function createScene() {
       globe.rotation.y += 0.0012;
       core.rotation.y = elapsed * 0.32;
       core.rotation.x = Math.sin(elapsed * 0.38) * 0.18;
+      const loadPulse = Math.min(1, Math.sqrt(loadPercent / 10));
+      const pulse = 1 + (0.025 + loadPulse * 0.12) * Math.sin(elapsed * (2.2 + loadPulse * 4));
+      core.scale.setScalar(pulse);
+      coreFill.material.opacity = 0.68 + loadPulse * 0.25;
       rings.rotation.y = Math.sin(elapsed * 0.24) * 0.08;
       satellites.forEach((item, index) => {
         const angle = item.angle + elapsed * (index % 2 ? -0.12 : 0.12);
@@ -167,6 +176,10 @@ async function createScene() {
       });
     }
     renderer.render(scene, camera);
+    if (host.classList.contains("scene-fallback")) {
+      window.SubmarineFallbackScene?.stop();
+      host.classList.remove("scene-fallback");
+    }
     host.classList.add("is-rendered");
     if (!reduceMotion && !document.hidden) frame = requestAnimationFrame(render);
   }
@@ -183,6 +196,6 @@ async function createScene() {
 }
 
 createScene().catch((error) => {
-  document.querySelector(".scene-wrap")?.classList.add("scene-fallback");
+  window.SubmarineFallbackScene?.start();
   console.error("Submarine 3D scene could not initialize", error);
 });

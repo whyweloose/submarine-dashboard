@@ -44,7 +44,7 @@ function timeAgo(timestamp) {
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
   localStorage.setItem("submarine-theme", theme);
-  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#081426" : "#f2f6fc";
+  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#111318" : "#f2f6fc";
   const icon = theme === "dark" ? "sun" : "moon";
   $("#themeToggle").innerHTML = `<i data-lucide="${icon}" aria-hidden="true"></i>`;
   window.dispatchEvent(new CustomEvent("submarine-themechange", { detail: { theme } }));
@@ -68,9 +68,7 @@ function getCurrentStats(server) {
 }
 
 function groupLabel(server) {
-  const groups = [...new Set(state.servers.map((entry) => entry.group || "Servers"))];
-  const index = groups.indexOf(server.group || "Servers");
-  return index >= 0 ? `Сеть ${index + 1}` : "СЕРВЕР";
+  return server.group || "Network";
 }
 
 function updateSummary(payload) {
@@ -78,11 +76,16 @@ function updateSummary(payload) {
   const onlineCount = live.reduce((sum, server) => sum + (Number(server.stats.online) || 0), 0);
   const tpsValues = live.map((server) => Number(server.stats.tps_average)).filter(Number.isFinite);
   const loadValues = live.map((server) => Number(server.stats.load_average_percent)).filter(Number.isFinite);
+  const currentLoadValues = live.map((server) => Number(server.stats.load_current_percent)).filter(Number.isFinite);
+  const currentLoad = currentLoadValues.length
+    ? currentLoadValues.reduce((sum, value) => sum + value, 0) / currentLoadValues.length
+    : 0;
   totalOnline.textContent = number(payload.total_online ?? onlineCount);
   $("#onlineServers").textContent = number(live.length);
   $("#registeredServers").textContent = `из ${number(state.servers.length)} серверов`;
   $("#averageTps").textContent = tpsValues.length ? number(tpsValues.reduce((a, b) => a + b, 0) / tpsValues.length, 2) : "—";
   $("#averageLoad").textContent = loadValues.length ? `${number(loadValues.reduce((a, b) => a + b, 0) / loadValues.length, 1)}%` : "—";
+  window.dispatchEvent(new CustomEvent("submarine-load-update", { detail: { loadPercent: currentLoad } }));
   $("#serverCount").textContent = number(state.servers.length);
   $("#updatedAt").textContent = new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date((payload.generated_at || Date.now() / 1000) * 1000));
   $("#overviewCaption").textContent = live.length
@@ -125,16 +128,16 @@ function renderGroups() {
 
   const groups = new Map();
   for (const server of state.servers) {
-    const label = server.group || "Серверы";
-    if (!groups.has(label)) groups.set(label, []);
-    groups.get(label).push(server);
+    const key = server.group_id || server.group || "Network";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(server);
   }
 
-  for (const [groupName, servers] of groups) {
+  for (const [groupKey, servers] of groups) {
     const online = servers.filter((server) => server.online).length;
     const players = servers.reduce((sum, server) => sum + (server.online ? Number(server.stats?.online) || 0 : 0), 0);
     const item = document.createElement("section");
-    const open = state.expandedGroup === groupName;
+    const open = state.expandedGroup === groupKey;
     item.className = `group-item${open ? " is-open" : ""}`;
     const button = document.createElement("button");
     button.type = "button";
@@ -147,7 +150,7 @@ function renderGroups() {
       </span>
       <span class="group-online"></span>
       <span class="group-chevron"><i data-lucide="chevron-down" aria-hidden="true"></i></span>`;
-    button.querySelector(".group-title").textContent = `Сеть ${groups.size ? [...groups.keys()].indexOf(groupName) + 1 : 1}`;
+    button.querySelector(".group-title").textContent = servers[0].group || "Network";
     button.querySelector(".group-caption").textContent = `${online} из ${servers.length} в сети`;
     button.querySelector(".group-online").textContent = `${number(players)} онлайн`;
 
@@ -156,7 +159,7 @@ function renderGroups() {
       button.addEventListener("click", () => openServer(servers[0].id));
     } else {
       button.addEventListener("click", () => {
-        state.expandedGroup = state.expandedGroup === groupName ? null : groupName;
+        state.expandedGroup = state.expandedGroup === groupKey ? null : groupKey;
         renderGroups();
       });
     }
@@ -398,4 +401,4 @@ window.addEventListener("resize", () => {
 });
 refresh();
 window.setInterval(refresh, POLL_INTERVAL);
-import("./network-scene.js?v=20261123-4").catch(() => document.querySelector(".scene-wrap")?.classList.add("scene-fallback"));
+import("./network-scene.js?v=20261123-5").catch(() => window.SubmarineFallbackScene?.start());

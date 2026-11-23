@@ -3,9 +3,9 @@
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --page: #081426;
-  --surface: #0d1b30;
-  --surface-raised: #12233b;
+  --page: #111318;
+  --surface: #171a20;
+  --surface-raised: #1e222a;
   --text: #eff5ff;
   --muted: #8fa4c0;
   --line: rgba(163, 190, 226, 0.14);
@@ -117,13 +117,13 @@ h1 { margin-bottom: 7px; font-size: 34px; font-weight: 600; line-height: 1.15; }
 .online-total span { color: var(--muted); font-size: 14px; }
 .overview-caption { margin: 12px 0 0; color: var(--muted); font-size: 12px; }
 
-.scene-wrap { --scene-blue: var(--accent); --scene-cyan: var(--cyan); --scene-violet: var(--violet); position: relative; width: 100%; height: 270px; align-self: center; perspective: 900px; }
+.scene-wrap { position: relative; width: 100%; height: 270px; margin-left: -14px; align-self: center; perspective: 900px; }
 .scene-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; opacity: 0; transition: opacity 320ms ease; }
-.scene-wrap.is-rendered canvas { opacity: 1; }
-.scene-wrap.scene-fallback canvas { display: none; }
-.scene-wrap.scene-fallback::before, .scene-wrap.scene-fallback::after { position: absolute; top: 50%; left: 50%; width: min(190px, 100%); aspect-ratio: 1; border: 1px solid color-mix(in srgb, var(--scene-blue) 72%, transparent); border-radius: 50%; content: ""; transform-style: preserve-3d; }
-.scene-wrap.scene-fallback::before { transform: translate(-50%, -50%) rotateX(62deg) rotateZ(-24deg); animation: scene-orbit 12s linear infinite; }
-.scene-wrap.scene-fallback::after { width: min(158px, 84%); border-color: color-mix(in srgb, var(--scene-cyan) 66%, transparent); transform: translate(-50%, -50%) rotateY(66deg) rotateZ(26deg); animation: scene-orbit-reverse 15s linear infinite; }
+.scene-wrap.is-rendered #networkScene { opacity: 1; }
+.scene-wrap.is-rendered #networkSceneFallback { opacity: 0; }
+.scene-wrap #networkSceneFallback { z-index: 2; }
+.scene-wrap.scene-fallback #networkScene { display: none; }
+.scene-wrap.scene-fallback #networkSceneFallback { opacity: 1; }
 .scene-wrap.scene-fallback { background: transparent; }
 .scene-caption { position: absolute; right: 0; bottom: 9px; z-index: 2; color: var(--muted); font-family: inherit; font-size: 10px; }
 .scene-caption span { padding: 0 5px; color: var(--coral); }
@@ -218,9 +218,6 @@ h1 { margin-bottom: 7px; font-size: 34px; font-weight: 600; line-height: 1.15; }
 @keyframes modal-in { from { opacity: 0; transform: translateY(10px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes panel-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes scene-orbit { to { transform: translate(-50%, -50%) rotateX(62deg) rotateZ(336deg); } }
-@keyframes scene-orbit-reverse { to { transform: translate(-50%, -50%) rotateY(66deg) rotateZ(-334deg); } }
-
 @media (max-width: 740px) {
   .page-shell { width: min(100% - 32px, 560px); }
   .topbar { height: auto; min-height: 64px; flex-wrap: wrap; row-gap: 8px; padding: 10px 0; }
@@ -233,7 +230,7 @@ h1 { margin-bottom: 7px; font-size: 34px; font-weight: 600; line-height: 1.15; }
   .online-total { gap: 8px; margin-top: 25px; }
   .online-total strong { font-size: 54px; }
   .online-total span { max-width: 78px; font-size: 12px; line-height: 1.35; }
-  .scene-wrap { width: 140px; height: 190px; margin-right: 0; justify-self: end; transform: scale(0.8); transform-origin: left center; }
+  .scene-wrap { width: 150px; height: 200px; margin-right: 0; justify-self: end; transform: translateX(-12px); }
   .scene-caption { display: none; }
   .group-toggle { grid-template-columns: minmax(0, 1fr) 18px; gap: 8px; padding-right: 8px; padding-left: 8px; }
   .group-online { display: none; }
@@ -251,11 +248,10 @@ h1 { margin-bottom: 7px; font-size: 34px; font-weight: 600; line-height: 1.15; }
 }
 
 @media (max-width: 440px) {
-  .overview { grid-template-columns: minmax(0, 1fr) 112px; min-height: 245px; }
+  .overview { grid-template-columns: minmax(0, 1fr) 128px; min-height: 245px; }
   .overview-copy { margin-left: 0; }
   h1 { max-width: 240px; font-size: 25px; }
-  .scene-wrap { width: 104px; height: 156px; margin-right: 0; justify-self: end; }
-  .scene-wrap.scene-fallback::before { width: min(138px, 100%); }
+  .scene-wrap { width: 116px; height: 174px; margin-right: 0; justify-self: end; transform: translateX(-8px); }
   .scene-caption { display: none; }
   .summary-item strong { font-size: 18px; }
   .summary-updated strong { font-size: 14px; }
