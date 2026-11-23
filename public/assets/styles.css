@@ -233,8 +233,8 @@ h1 { margin-bottom: 7px; font-size: 34px; font-weight: 600; line-height: 1.15; }
   .online-total { gap: 8px; margin-top: 25px; }
   .online-total strong { font-size: 54px; }
   .online-total span { max-width: 78px; font-size: 12px; line-height: 1.35; }
-  .scene-wrap { height: 190px; margin-right: -24px; }
-  .scene-caption { right: 9px; bottom: 2px; font-size: 8px; }
+  .scene-wrap { width: 140px; height: 190px; margin-right: 0; justify-self: end; }
+  .scene-caption { display: none; }
   .group-toggle { grid-template-columns: minmax(0, 1fr) 18px; gap: 8px; padding-right: 8px; padding-left: 8px; }
   .group-online { display: none; }
   .summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; padding: 20px 0; }

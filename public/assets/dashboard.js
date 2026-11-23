@@ -398,4 +398,4 @@ window.addEventListener("resize", () => {
 });
 refresh();
 window.setInterval(refresh, POLL_INTERVAL);
-import("./network-scene.js?v=20261123-3").catch(() => document.querySelector(".scene-wrap")?.classList.add("scene-fallback"));
+import("./network-scene.js?v=20261123-4").catch(() => document.querySelector(".scene-wrap")?.classList.add("scene-fallback"));
