@@ -1,0 +1,46 @@
+--- a/pocketmine/Server.php
++++ b/pocketmine/Server.php
+@@ -107,6 +107,7 @@
+ use pocketmine\plugin\ScriptPluginLoader;
+ use pocketmine\resourcepacks\ResourcePackManager;
+ use pocketmine\scheduler\AsyncPool;
++use pocketmine\telemetry\ServerTelemetry;
+ use pocketmine\snooze\SleeperHandler;
+ use pocketmine\snooze\SleeperNotifier;
+ use pocketmine\thread\log\AttachableThreadSafeLogger;
+@@ -279,6 +280,7 @@
+ 
+ 	/** @var AsyncPool */
+ 	private $asyncPool;
++	private ?ServerTelemetry $serverTelemetry = null;
+ 
+ 	/** Counts the ticks since the server start */
+ 	private int $tickCounter = 0;
+@@ -1681,6 +1683,7 @@
+ 			}
+ 
+ 			$this->asyncPool = new AsyncPool($this, "Asynchronous", $poolSize, $this->autoloader, $this->logger);
++			$this->serverTelemetry = ServerTelemetry::fromConfig($this);
+ 
+ 			if ($this->getProperty("network.batch-threshold", 256) >= 0) {
+ 				NetworkCompression::$THRESHOLD = (int) $this->getProperty("network.batch-threshold", 256);
+@@ -2941,5 +2944,6 @@
+ 		$idx = $this->tickCounter % self::TARGET_TICKS_PER_SECOND;
+ 		$this->tickAverage[$idx] = $this->currentTPS;
+ 		$this->useAverage[$idx] = $this->currentUse;
++		$this->serverTelemetry?->tick();
+ 
+ 		if (($this->nextTick - $tickTime) < -1) {
+--- a/pocketmine/resources/submarine.yml
++++ b/pocketmine/resources/submarine.yml
+@@ -21,6 +21,10 @@
+     require-identity: false
+     verify-identity: true
+ 
++telemetry:
++  enabled: false
++  interval-seconds: 30
++
+ query:
+   server-name: "Submarine"
+   visible-plugins: false

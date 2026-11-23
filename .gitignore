@@ -1,0 +1,8 @@
+__pycache__/
+node_modules/
+npm-debug.log*
+config/
+data/*.json
+runtime-config/
+.DS_Store
+._*

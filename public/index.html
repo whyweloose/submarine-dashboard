@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081426">
+  <meta name="description" content="Живая статистика серверов Submarine">
+  <link rel="icon" href="/favicon.svg?v=20261123-2" type="image/svg+xml">
+  <title>Submarine | Статистика серверов</title>
+  <link rel="stylesheet" href="/assets/styles.css?v=20261123-2">
+  <link rel="modulepreload" href="/assets/vendor/three.module.js">
+  <script src="/assets/vendor/lucide.min.js" defer></script>
+  <script type="module" src="/assets/dashboard.js?v=20261123-2"></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Submarine, главная">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span class="brand-name">SUBMARINE</span>
+      </a>
+      <nav class="primary-tabs" role="tablist" aria-label="Разделы">
+        <button class="tab-button" id="overviewTab" type="button" role="tab" aria-selected="true" aria-controls="overviewPanel" tabindex="0">Серверы</button>
+        <button class="tab-button" id="apiTab" type="button" role="tab" aria-selected="false" aria-controls="apiPanel" tabindex="-1">API</button>
+      </nav>
+      <div class="topbar-tools">
+        <span class="live-indicator"><i aria-hidden="true"></i><span id="connectionLabel">Подключение</span></span>
+        <button class="icon-button" id="themeToggle" type="button" title="Сменить тему" aria-label="Сменить тему">
+          <i data-lucide="sun-moon" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="tab-panel" id="overviewPanel" role="tabpanel" aria-labelledby="overviewTab" tabindex="0">
+      <section class="overview" aria-labelledby="pageTitle">
+        <div class="overview-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span>МОНИТОРИНГ СЕТИ</p>
+          <h1 id="pageTitle">Статистика серверов</h1>
+          <p class="intro-copy">Submarine в реальном времени</p>
+          <div class="online-total" aria-live="polite">
+            <strong id="totalOnline">—</strong>
+            <span>игроков в сети</span>
+          </div>
+          <p class="overview-caption" id="overviewCaption">Ожидание данных серверов</p>
+        </div>
+        <div class="scene-wrap" aria-label="Анимированная 3D-сцена сети серверов">
+          <canvas id="networkScene" role="img" aria-label="Вращающаяся 3D-сфера серверной сети"></canvas>
+          <span class="scene-caption">WHYWELOOSE <span>·</span> SUBMARINE</span>
+        </div>
+      </section>
+
+      <section class="summary-strip" aria-label="Сводная статистика">
+        <div class="summary-item">
+          <span class="summary-label">Работают</span>
+          <strong id="onlineServers">—</strong>
+          <span class="summary-unit" id="registeredServers">серверов</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Средний TPS</span>
+          <strong id="averageTps">—</strong>
+          <span class="summary-unit">по сети</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Нагрузка тика</span>
+          <strong id="averageLoad">—</strong>
+          <span class="summary-unit">средняя</span>
+        </div>
+        <div class="summary-item summary-updated">
+          <span class="summary-label">Обновлено</span>
+          <strong id="updatedAt">—</strong>
+          <span class="summary-unit">автообновление</span>
+        </div>
+      </section>
+
+      <section class="servers-section" aria-labelledby="serversTitle">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">ЖИВЫЕ ДАННЫЕ</p>
+            <h2 id="serversTitle">Серверы</h2>
+          </div>
+          <span class="section-count" id="serverCount">0</span>
+        </div>
+        <div id="groups" class="groups-list" aria-live="polite">
+          <div class="empty-state" id="emptyState">
+            <span class="empty-mark" aria-hidden="true"><i data-lucide="radio-tower"></i></span>
+            <div>
+              <strong>Загружаем серверы</strong>
+              <p>Статистика появится, как только подключится первое ядро.</p>
+            </div>
+          </div>
+        </div>
+        <p class="error-message" id="apiError" role="status" hidden>Не удалось получить данные. Повторная попытка выполняется автоматически.</p>
+      </section>
+      </section>
+
+      <section class="api-panel" id="apiPanel" role="tabpanel" aria-labelledby="apiTab" tabindex="0" hidden>
+        <header class="api-heading">
+          <p class="eyebrow">SUBMARINE NETWORK</p>
+          <h1>API</h1>
+          <p>Методы статистики серверов и отправки телеметрии.</p>
+          <code class="api-base">https://api.whyweloose.pw/api/submarine/v1</code>
+        </header>
+
+        <section class="api-method" aria-labelledby="indexMethod">
+          <div class="api-method-heading"><span class="http-method http-get">GET</span><h2 id="indexMethod"><code>/</code></h2><span>Список доступных маршрутов API.</span></div>
+          <pre><code>curl https://api.whyweloose.pw/api/submarine/v1/</code></pre>
+          <pre class="api-response"><code>{ "service": "submarine-dashboard", "version": 1, "endpoints": [...] }</code></pre>
+        </section>
+
+        <section class="api-method" aria-labelledby="healthMethod">
+          <div class="api-method-heading"><span class="http-method http-get">GET</span><h2 id="healthMethod"><code>/health</code></h2><span>Проверка доступности API.</span></div>
+          <pre><code>curl https://api.whyweloose.pw/api/submarine/v1/health</code></pre>
+          <pre class="api-response"><code>{ "ok": true, "service": "submarine-dashboard" }</code></pre>
+        </section>
+
+        <section class="api-method" aria-labelledby="serversMethod">
+          <div class="api-method-heading"><span class="http-method http-get">GET</span><h2 id="serversMethod"><code>/servers</code></h2><span>Список серверов, общий онлайн и последние точки истории.</span></div>
+          <pre><code>curl https://api.whyweloose.pw/api/submarine/v1/servers</code></pre>
+          <p class="api-note">Ответ содержит <code>generated_at</code>, <code>total_online</code> и массив <code>servers</code>. У каждого сервера есть <code>id</code>, <code>name</code>, <code>group</code>, <code>online</code>, <code>last_seen</code>, <code>stats</code> и <code>history</code>.</p>
+        </section>
+
+        <section class="api-method" aria-labelledby="serverMethod">
+          <div class="api-method-heading"><span class="http-method http-get">GET</span><h2 id="serverMethod"><code>/servers/{id}</code></h2><span>Подробная статистика одного сервера.</span></div>
+          <pre><code>curl https://api.whyweloose.pw/api/submarine/v1/servers/grief</code></pre>
+          <p class="api-note">Для неизвестного ID возвращается <code>404</code>. История содержит до 360 последних измерений.</p>
+        </section>
+
+        <section class="api-method" aria-labelledby="telemetryMethod">
+          <div class="api-method-heading"><span class="http-method http-post">POST</span><h2 id="telemetryMethod"><code>/telemetry</code></h2><span>Приём статистики от ядра Submarine.</span></div>
+          <p class="api-note">Тело запроса JSON. Новые серверы автоматически появляются после первого отчёта; токен и регистрация не нужны. Серверы с одного IP отображаются в общей группе.</p>
+          <p class="api-note">Лимит: 120 отчётов в минуту с одного IP, максимум 256 серверов. IP используется для группы, хэшируется перед сохранением и не раскрывается в API.</p>
+          <pre><code>curl -X POST https://api.whyweloose.pw/api/submarine/v1/telemetry \
+  -H 'Content-Type: application/json' \
+  --data '{"server_id":"grief","server_name":"Grief #1","stats":{"uptime_seconds":3600,"tps_current":20,"load_current_percent":12.5,"tps_average":19.98,"load_average_percent":13.2,"online":8,"max_players":100,"network_upload_kb_s":4.2,"network_download_kb_s":8.1,"thread_count":12,"memory_mb":{"main":45,"total":620,"virtual":810,"heap":48,"max":2048},"worlds":[]}}'</code></pre>
+          <p class="api-note">В <code>stats</code> передаются uptime, текущие и средние TPS/нагрузка, онлайн, сетевой трафик, потоки, память и массив миров. Имя можно передать в <code>server_name</code>, иначе берётся ID из каталога сервера. IP не сохраняется; общий IP определяет группу серверов.</p>
+          <pre class="api-response"><code>{ "accepted": true, "server_id": "grief" }</code></pre>
+          <p class="api-note">Успешный отчёт возвращает <code>202</code>; неправильный ID или JSON — <code>400</code>, превышение частоты или лимита новых серверов — <code>429</code>.</p>
+        </section>
+
+        <section class="api-schema" aria-labelledby="statsSchemaTitle">
+          <h2 id="statsSchemaTitle">Поля stats</h2>
+          <p><code>uptime_seconds</code>, <code>tps_current</code>, <code>load_current_percent</code>, <code>tps_average</code>, <code>load_average_percent</code>, <code>online</code>, <code>max_players</code>, <code>network_upload_kb_s</code>, <code>network_download_kb_s</code>, <code>thread_count</code>, <code>memory_mb</code>, <code>worlds</code>.</p>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>SUBMARINE NETWORK</span>
+      <span class="footer-author">by <strong>whyweloose</strong></span>
+    </footer>
+  </div>
+
+  <dialog class="server-dialog" id="serverDialog" aria-labelledby="dialogServerName">
+    <div class="dialog-surface">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow" id="dialogGroup">СЕРВЕР</p>
+          <h2 id="dialogServerName">—</h2>
+        </div>
+        <button class="icon-button dialog-close" id="dialogClose" type="button" title="Закрыть" aria-label="Закрыть">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="dialog-status-row">
+        <span class="status-badge" id="dialogStatus"><i></i>Нет данных</span>
+        <span class="dialog-address" id="dialogAddress"></span>
+        <span class="dialog-seen" id="dialogSeen"></span>
+      </div>
+      <div class="detail-grid" id="detailGrid"></div>
+      <section class="history-section" aria-labelledby="historyTitle">
+        <div class="history-heading">
+          <div>
+            <p class="eyebrow">ПОСЛЕДНИЕ 3 ЧАСА</p>
+            <h3 id="historyTitle">TPS и нагрузка</h3>
+          </div>
+          <div class="chart-legend"><span class="legend-tps">TPS</span><span class="legend-load">Нагрузка</span></div>
+        </div>
+        <canvas id="historyChart" height="118" aria-label="График TPS и нагрузки"></canvas>
+      </section>
+      <section class="worlds-section" aria-labelledby="worldsTitle">
+        <div class="history-heading">
+          <div>
+            <p class="eyebrow">МИРЫ</p>
+            <h3 id="worldsTitle">Состояние миров</h3>
+          </div>
+        </div>
+        <div class="world-list" id="worldList"></div>
+      </section>
+    </div>
+  </dialog>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", () => window.lucide?.createIcons());
+  </script>
+</body>
+</html>

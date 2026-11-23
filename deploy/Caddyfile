@@ -1,0 +1,15 @@
+api.whyweloose.pw {
+	tls /data/certs/api/fullchain.pem /data/certs/api/privkey.pem
+	reverse_proxy 172.18.0.1:80
+}
+
+timings.whyweloose.pw {
+	reverse_proxy 172.18.0.1:80
+}
+
+{$DOMAIN} {
+	request_body {
+		max_size 16KB
+	}
+	reverse_proxy api:8000
+}

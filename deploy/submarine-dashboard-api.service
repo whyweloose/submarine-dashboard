@@ -1,0 +1,29 @@
+[Unit]
+Description=Submarine dashboard API
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/submarine-dashboard
+Environment=SUBMARINE_DASHBOARD_HOST=127.0.0.1
+Environment=SUBMARINE_DASHBOARD_PORT=8765
+Environment=SUBMARINE_DASHBOARD_STORE=/var/lib/submarine-dashboard/state.json
+ExecStart=/usr/bin/node /opt/submarine-dashboard/api/server.js
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/submarine-dashboard
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+MemoryMax=128M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target
