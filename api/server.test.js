@@ -90,8 +90,9 @@ test("auto-discovers servers and persists telemetry without a registration file"
     });
     assert.equal(sameNetwork.status, 202);
     const sameNetworkServer = await fetch(`${origin}${api}/servers/survival`);
-    assert.equal((await sameNetworkServer.json()).group_id, payload.servers[0].group_id);
-    assert.equal((await sameNetworkServer.json()).group, "Network");
+    const sameNetworkPayload = await sameNetworkServer.json();
+    assert.equal(sameNetworkPayload.group_id, payload.servers[0].group_id);
+    assert.equal(sameNetworkPayload.group, "Network");
 
     const detail = await fetch(`${origin}${api}/servers/grief`);
     assert.equal(detail.status, 200);
