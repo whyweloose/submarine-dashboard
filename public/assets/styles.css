@@ -254,7 +254,7 @@ h1 { margin-bottom: 7px; font-size: 34px; font-weight: 600; line-height: 1.15; }
   .overview { grid-template-columns: minmax(0, 1fr) 112px; min-height: 245px; }
   .overview-copy { margin-left: 0; }
   h1 { max-width: 240px; font-size: 25px; }
-  .scene-wrap { width: 145px; height: 176px; margin-right: -28px; }
+  .scene-wrap { width: 104px; height: 156px; margin-right: 0; justify-self: end; }
   .scene-wrap.scene-fallback::before { width: min(138px, 100%); }
   .scene-caption { display: none; }
   .summary-item strong { font-size: 18px; }

@@ -131,6 +131,7 @@ async function createScene() {
     if (!width || !height) return;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
+    camera.position.z = width <= 112 ? 9.5 : 7.3;
     camera.updateProjectionMatrix();
   };
   const observer = new ResizeObserver(resize);
